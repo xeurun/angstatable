@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e6fd2fb4-d3f8-47d9-a939-0c3e4b3cab05" name="Default" comment="" />
+    <list default="true" id="e6fd2fb4-d3f8-47d9-a939-0c3e4b3cab05" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/js/directive/angstatable.js" afterPath="$PROJECT_DIR$/js/directive/angstatable.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+    </list>
     <ignored path="angstatable.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path=".idea/dataSources.local.xml" />
@@ -48,14 +51,17 @@
       <file leaf-file-name="angstatable.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/js/directive/angstatable.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.63826364" vertical-offset="1421" max-vertical-offset="2088">
-              <caret line="101" column="67" selection-start-line="101" selection-start-column="67" selection-end-line="101" selection-end-column="67" />
+            <state vertical-scroll-proportion="2.1993568" vertical-offset="0" max-vertical-offset="2250">
+              <caret line="76" column="52" selection-start-line="76" selection-start-column="52" selection-end-line="76" selection-end-column="52" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -81,7 +87,7 @@
     <option name="width" value="1317" />
     <option name="height" value="744" />
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
     <OptionsSetting value="true" id="Remove" />
     <OptionsSetting value="true" id="Checkout" />
@@ -354,8 +360,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/js/directive/angstatable.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.63826364" vertical-offset="1421" max-vertical-offset="2088">
-          <caret line="101" column="67" selection-start-line="101" selection-start-column="67" selection-end-line="101" selection-end-column="67" />
+        <state vertical-scroll-proportion="2.1993568" vertical-offset="0" max-vertical-offset="2250">
+          <caret line="76" column="52" selection-start-line="76" selection-start-column="52" selection-end-line="76" selection-end-column="52" />
           <folding />
         </state>
       </provider>
