@@ -1,0 +1,36 @@
+
+section {
+    padding-top: 40px;
+}
+.sortable:hover {
+    cursor: pointer;
+    background: #eeeeee;
+}
+.asc, .desc {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    line-height: 14px;
+    vertical-align: text-top;
+    background-image: url("../assets/bootstrap/img/glyphicons-halflings.png");
+    background-position: 14px 14px;
+    background-repeat: no-repeat;
+}
+.asc {
+    background-position: -288px -120px;
+}
+.desc {
+    background-position: -313px -119px;
+}
+table {
+    table-layout: fixed;
+}
+th {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
