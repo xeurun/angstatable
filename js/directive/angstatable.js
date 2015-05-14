@@ -1,5 +1,5 @@
 angular.module("angStaTable", ['ngRoute']).// Main table directive, store common logic, template and data
-directive('angStaTable', ['$location', function($location) {
+directive('angStaTable', ['$location', '$window', function($location, $window) {
     var directive = {
             restrict: 'E',
             replace: true,
@@ -67,7 +67,6 @@ directive('angStaTable', ['$location', function($location) {
                 };
 
                 $scope.removeRow = function(row) {
-                    $scope.data.splice(row, 1);
                     //Delete current row and change offset other row
                     angular.forEach($location.search(), function(value, key) {
                         var index = key.split(':');
@@ -78,6 +77,7 @@ directive('angStaTable', ['$location', function($location) {
                             $location.search(key, null);
                         }
                     });
+                    $window.location.reload();
                 };
 
                 this.change = function(row, coll, value) {
