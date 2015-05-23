@@ -1,11 +1,13 @@
-angular.module("angStaTable", ['ngRoute']).// Main table directive, store common logic, template and data
+angular.module("angStaTable", []).
+// Main table directive, store common logic, template and data
 directive('angStaTable', ['$location', '$window', function($location, $window) {
     var directive = {
             restrict: 'E',
             replace: true,
             transclude: true,
             scope: {
-                caption: "@"
+                caption: "@",
+                limit: "@"
             },
             template: [
                 '<div>',
@@ -18,21 +20,30 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                                 '<th ng-repeat="column in columns"' +
                                     'ng-class="{sortable: column.sortable}"' +
                                     'ng-click="sortBy(column)">',
-                                    '{{ column.name }} <i ng-class="getSortDir(column)"></i>',
+                                    '{{ column.name }} <i ng-class="getSortDir(column)"></i>' +
+                                    '<filter type="{{ column.filter }}"></filter>',
                                 '</th>',
                                 '<th>Actions</th>',
                             '</tr>',
                         '</thead>',
                         '<tbody>',
-                            '<tr ng-repeat="(row, element) in data track by $index">',
+                            '<tr ng-repeat="(row, element) in data | offset: (page * limit) | limitTo : limit track by $index">',
                                 '<td ng-repeat="(coll, column) in columns">',
-                                    '<cell value="{{ element[coll] }}" row="{{ row }}" coll="{{ coll }}" type="{{ column.type }}" />',
+                                    '<cell value="{{ data[page * limit + row][coll] }}" row="{{ page * limit + row }}" coll="{{ coll }}" type="{{ column.type }}" />',
                                 '</td>',
                                 '<td><button ng-click="removeRow(row)">Remove row</button>',
                                 '<td><button ng-click="copyRow(row)">Copy row</button>',
                             '</tr>',
                         '</tbody>',
                     '</table>',
+                    '<div id="footer">',
+                        '<span>Current page: {{ page + 1 }}</span>',
+                        '<ul id="pagination">',
+                            '<li ng-repeat="index in data | pagination:limit" ng-click="switchPage(index)" ng-class="{ active: (page === index) }">',
+                                '{{ index + 1 }}',
+                            '</li>',
+                        '</ul>',
+                    '</div>',
                 '</div>'
             ].join(""),
             link: function ($scope, $element, attrs) {
@@ -45,9 +56,9 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                 //$element.html('');
             },
             controller: function($scope) {
+                $scope.page = 0;
                 $scope.columns = [];
                 $scope.data = [];
-                console.log($location.search());
                 angular.forEach($location.search(), function(value, key) {
                     var index = key.split(':');
                     //Init array if undefined
@@ -56,14 +67,27 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                     }
                     $scope.data[index[0]][index[1]] = value;
                 });
-                console.log($scope.data);
+
+                $scope.switchPage = function(index) {
+                    $scope.page = index;
+                };
 
                 $scope.addRow = function() {
+                    var newIndex = $scope.data.length;
                     $scope.data.push([]);
+                    
+                    angular.forEach($scope.columns, function(value, key) {
+                        $location.search(newIndex + ':' + key, '');
+                    });
                 };
 
                 $scope.copyRow = function(row) {
+                    var newIndex = $scope.data.length;
                     $scope.data.push($scope.data[row]);
+                    
+                    angular.forEach($scope.columns, function(value, key) {
+                        $location.search(newIndex + ':' + key, $scope.data[row][key]);
+                    });
                 };
 
                 $scope.removeRow = function(row) {
@@ -91,13 +115,45 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
         };
 
     return directive;
-}]).// Cell directive, logic for single cell
+}]).
+// Filter directive, logic for single filter
+directive('filter', ['$compile', function($compile) {
+    var getTemplate = function(type) {
+            var template = '<input type="text" ng-model="value""/>';
+
+            switch(type) {
+                case 'text': template = '<input type="text"/>'; break;
+                case 'number': template = '<input type="number"/>'; break;
+                case 'boolean': template = '<input type="checkbox"/>';break;
+                case 'date': template = '<input type="date"/>'; break;
+                case 'time': template = '<input type="time"/>'; break;
+                default: template;
+            }
+
+            return template;
+        },
+        directive = {
+            restrict: 'E',
+            replace: true,
+            scope: true,
+            require: '^angStaTable',
+            link: function ($scope, $element, attrs, $controller) {
+                if(attrs.type) {
+                    $element.html(getTemplate(attrs.type));
+                    $compile($element.contents())($scope);
+                }
+            }
+        };
+
+    return directive;
+}]).
+// Cell directive, logic for single cell
 directive('cell', ['$compile', function($compile) {
     var getTemplate = function(type) {
             var template = '<input type="text" ng-model="value""/>';
 
             switch(type) {
-                case 'counter': template = '<span>{{ row }}</span>'; break;
+                case 'counter': template = '<span>{{ page * limit + row + 1 }}</span>'; break;
                 case 'text': template = '<input type="text" ng-model="value"/>'; break;
                 case 'integer': template = '<input type="integer" ng-model="value"/>'; break;
                 case 'number': template = '<input type="number" ng-model="value"/>'; break;
@@ -129,7 +185,7 @@ directive('cell', ['$compile', function($compile) {
                 switch(attrs.type) {
                     case 'counter': $scope.value = attrs.value; break;
                     case 'text': $scope.value = attrs.value; break;
-                    case 'integer': $scope.value = attrs.value; break;
+                    case 'integer': $scope.value = parseInt(attrs.value); break;
                     case 'number': $scope.value = parseInt(attrs.value); break;
                     case 'checkbox': $scope.value = (attrs.value !== "false");break;
                     case 'date': $scope.value = new Date(angular.isUndefined(attrs.value) ? null : attrs.value); break;
@@ -145,7 +201,8 @@ directive('cell', ['$compile', function($compile) {
         };
 
     return directive;
-}]).// Column directive, visual sugar
+}]).
+// Column directive, visual sugar
 directive('column', [function() {
     var directive = {
             restrict: 'E',
@@ -153,10 +210,26 @@ directive('column', [function() {
             link: function ($scope, $element, attrs, $controller) {
                 $controller.addColumn({
                     type: attrs.type,
-                    name: attrs.name
+                    name: attrs.name,
+                    filter: attrs.filter
                 });
             }
         };
 
     return directive;
-}]);
+}]).
+filter('pagination', function() {
+    return function(items, limit) {
+        var pages = [];
+        for(var i = 0; i < items.length; i += parseInt(limit) ) {
+           pages.push(pages.length);
+        }
+        
+        return pages;
+    };
+})
+.filter('offset', function() {
+    return function(items, begin) {
+        return items.slice(begin);
+    };
+});

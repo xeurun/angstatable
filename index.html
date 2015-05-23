@@ -3,26 +3,25 @@
     <head lang="en">
         <meta charset="UTF-8">
         <title>Angular State Table</title>
-        <link type="text/css" href="/css/angular-csp.css" rel="stylesheet"/>
-        <link type="text/css" href="/css/style.css" rel="stylesheet"/>
-        <script type="text/javascript" src="/js/vendor/angular.js"></script>
-        <script type="text/javascript" src="/js/vendor/angular-route.js"></script>
-        <script type="text/javascript" src="/js/app.js"></script>
-        <script type="text/javascript" src="/js/directive/angstatable.js"></script>
+        <link type="text/css" href="./css/angular-csp.css" rel="stylesheet"/>
+        <link type="text/css" href="./css/style.css" rel="stylesheet"/>
+        <script type="text/javascript" src="./js/vendor/angular.js"></script>
+        <script type="text/javascript" src="./js/app.js"></script>
+        <script type="text/javascript" src="./js/directive/angstatable.js"></script>
     </head>
     <body ng-app="AngStaTableTest">
         <sub>{{ contactList }}</sub>
         <div class="container">
-            <ang-sta-table caption="Types">
-                <column type="counter" name="counter"></column>
-                <column type="text" name="text"></column>
-                <column type="integer" name="integer"></column>
-                <column type="number" name="number"></column>
-                <column type="checkbox" name="checkbox"></column>
-                <column type="date" name="date"></column>
-                <column type="time" name="time"></column>
-                <column type="email" name="email"></column>
-                <column type="url" name="url"></column>
+            <ang-sta-table caption="Types" limit="2">
+                <column type="counter" name="#"></column>
+                <column type="text" name="text" filter="text"></column>
+                <column type="integer" name="integer" filter="number"></column>
+                <column type="number" name="number" filter="number"></column>
+                <column type="checkbox" name="checkbox" filter="boolean"></column>
+                <column type="date" name="date" filter="date"></column>
+                <column type="time" name="time" filter="time"></column>
+                <column type="email" name="email" filter="text"></column>
+                <column type="url" name="url" filter="text"></column>
             </ang-sta-table>
         </div>
     </body>
