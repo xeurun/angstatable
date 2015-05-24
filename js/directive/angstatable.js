@@ -39,7 +39,7 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                     '<div id="footer">',
                         '<span>Current page: {{ page + 1 }}</span>',
                         '<ul id="pagination">',
-                            '<li ng-repeat="index in data | pagination:limit" ng-click="switchPage(index)" ng-class="{ active: (page === index) }">',
+                            '<li ng-repeat="index in data | pages:limit" ng-click="switchPage(index)" ng-class="{ active: (page === index) }">',
                                 '{{ index + 1 }}',
                             '</li>',
                         '</ul>',
@@ -59,19 +59,30 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                 $scope.page = 0;
                 $scope.columns = [];
                 $scope.data = [];
+                
+                //Parse url query
                 angular.forEach($location.search(), function(value, key) {
-                    var index = key.split(':');
-                    //Init array if undefined
-                    if(angular.isUndefined($scope.data[index[0]])) {
-                        $scope.data[index[0]] = [];
+                    //Parse cell index, simple 1:1
+                    if(key.indexOf(':') >= 0) {
+                        var index = key.split(':');
+                        //Init array if undefined
+                        if(angular.isUndefined($scope.data[index[0]])) {
+                            $scope.data[index[0]] = [];
+                        }
+                        // index[0] - row, index[1] - cell
+                        $scope.data[index[0]][index[1]] = value;
+                    } else if (key === 'page') {
+                        $scope.page = parseInt(value);
                     }
-                    $scope.data[index[0]][index[1]] = value;
                 });
 
+                // Switch current page
                 $scope.switchPage = function(index) {
                     $scope.page = index;
+                    $location.search('page', index);
                 };
 
+                // Add new row, location for fix pagination
                 $scope.addRow = function() {
                     var newIndex = $scope.data.length;
                     $scope.data.push([]);
@@ -81,6 +92,7 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                     });
                 };
 
+                // Copy row, location for fix pagination
                 $scope.copyRow = function(row) {
                     var newIndex = $scope.data.length;
                     $scope.data.push($scope.data[row]);
@@ -90,11 +102,14 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                     });
                 };
 
+                // Remove row, update locate(decrease index in url query)
                 $scope.removeRow = function(row) {
                     //Delete current row and change offset other row
                     angular.forEach($location.search(), function(value, key) {
                         var index = key.split(':');
+                        // index[0] - row, index[1] - cell
                         if(index[0] > row) {
+                            // Decrease index
                             $location.search((index[0] - 1) + ':' + index[1], value);
                             $location.search(index[0] + ':' + index[1], null);
                         } else if(index[0] == row) {
@@ -103,7 +118,7 @@ directive('angStaTable', ['$location', '$window', function($location, $window) {
                     });
                     $window.location.reload();
                 };
-
+                
                 this.change = function(row, coll, value) {
                     $location.search(row + ':' + coll, value);
                 };
@@ -138,6 +153,7 @@ directive('filter', ['$compile', function($compile) {
             scope: true,
             require: '^angStaTable',
             link: function ($scope, $element, attrs, $controller) {
+                // If type exists add filter
                 if(attrs.type) {
                     $element.html(getTemplate(attrs.type));
                     $compile($element.contents())($scope);
@@ -180,10 +196,9 @@ directive('cell', ['$compile', function($compile) {
                         $controller.change(attrs.row, attrs.coll, newValue);
                     }
                 });
-
+                
                 // TODO: Refactor + add types + delete counter value
                 switch(attrs.type) {
-                    case 'counter': $scope.value = attrs.value; break;
                     case 'text': $scope.value = attrs.value; break;
                     case 'integer': $scope.value = parseInt(attrs.value); break;
                     case 'number': $scope.value = parseInt(attrs.value); break;
@@ -202,7 +217,7 @@ directive('cell', ['$compile', function($compile) {
 
     return directive;
 }]).
-// Column directive, visual sugar
+// Column directive, visual sugar, run once time when run
 directive('column', [function() {
     var directive = {
             restrict: 'E',
@@ -218,9 +233,11 @@ directive('column', [function() {
 
     return directive;
 }]).
-filter('pagination', function() {
+// Return array with number of the pages
+filter('pages', function() {
     return function(items, limit) {
         var pages = [];
+        
         for(var i = 0; i < items.length; i += parseInt(limit) ) {
            pages.push(pages.length);
         }
@@ -228,6 +245,7 @@ filter('pagination', function() {
         return pages;
     };
 })
+// Return sliced array by begin value
 .filter('offset', function() {
     return function(items, begin) {
         return items.slice(begin);
