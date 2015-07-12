@@ -16,6 +16,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
             template: [
                 '<div>',
                     '<div><button ng-click="addRow()">Add row</button></div>',
+                    '<div><button ng-click="debugRefresh()">Refresh</button></div>',
                     '<ng-transclude></ng-transclude>',
                     '<table>',
                         '<caption>{{ caption }}</caption>',
@@ -24,7 +25,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                                 '<th ng-show="counter">{{ counter }}</th>',
                                 '<th ng-repeat="(key, column) in columns"' +
                                     'ng-class="{sortable: column.sortable}"' +
-                                    'ng-click="setSortBy(key)">',
+                                    'ng-click="setOrderBy(key)">',
                                     '{{ column.caption }}',
                                     '<br>',
                                     '<ng-query-table-filter type="{{ column.filter }}"/>',
@@ -33,7 +34,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                             '</tr>',
                         '</thead>',
                         '<tbody>',
-                            '<tr ng-repeat="(row, element) in query | limitTo : limit : (page * limit)">',
+                            '<tr ng-repeat="(row, element) in getFormattedData()">',
                                 '<td ng-show="counter">{{ page * limit + row + 1 }}</td>',
                                 '<td ng-repeat="(coll, column) in columns">',
                                     '<ng-query-table-cell value="{{ query[page * limit + row][coll] }}" row="{{ page * limit + row }}" coll="{{ coll }}" type="{{ column.type }}" />',
@@ -59,11 +60,13 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
             compile: function($element, attrs) {
                 //$element.html('');
             },
-            controller: function($scope) {
-                $scope.page = 0;
-                $scope.sortBy = 'index';
+            controller: function($scope, $filter) {
+                var self = this;
                 $scope.columns = [];
+                $scope.orderBy = 0;
+                $scope.direction = '-';
                 $scope.query = [];
+                $scope.page = 0;
                 
                 //Parse url query
                 angular.forEach($location.search(), function(value, key) {
@@ -78,12 +81,26 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                         $scope.query[keys[0]][keys[1]] = value;
                     } else if (key === 'page') {
                         $scope.page = parseInt(value);
-                    } else if (key === 'sortBy') {
-                        $scope.sortBy = parseInt(value);
+                    } else if (key === 'orderBy') {
+                        $scope.orderBy = parseInt(value);
+                    } else if (key === 'direction') {
+                        $scope.direction = value;
                     }
                 });
                 
                 console.log($scope.query);
+                
+                /* DEBUG SECTION */
+                
+                $scope.debugRefresh = function() {
+                    $scope.query = $filter('limitTo')($filter('orderBy')($scope.query, $scope.direction + $scope.orderBy, false), $scope.limit, $scope.page * $scope.limit);
+                }
+                
+                /* END DEBUG SECTION */
+                
+                $scope.getFormattedData = function() {
+                    return $filter('limitTo')($filter('orderBy')($scope.query, $scope.direction + $scope.orderBy, false), $scope.limit, $scope.page * $scope.limit);
+                };
                 
                 this.change = function(row, coll, value) {
                     console.log('Changed ' + (row + ':' + coll) + ' new value: ' + value);
@@ -113,16 +130,22 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                     $location.search('page', index);
                 };
 
-                // Set setSortBy
-                $scope.setSortBy = function(column) {
+                // Set orderBy
+                $scope.setOrderBy = function(column) {
                     column = parseInt(column);
-                    $scope.sortBy = column;
-                    $location.search('sortBy', column);
+                    if(column === $scope.orderBy) {
+                        $scope.direction = $scope.direction === '-' ? '+' : '-';
+                        $location.search('direction', $scope.direction);
+                    } else {
+                        $scope.orderBy = column;
+                        $location.search('orderBy', column);
+                        $location.search('direction', $scope.direction);
+                    }
                 };
 
                 // Add new row, location for fix pagination
                 $scope.addRow = function() {
-                    var indx = $scope.query.push({});
+                    var indx = $scope.query.push({}) - 1;
                     angular.forEach($scope.columns, function(column, key) {
                         var value = null;
                         switch(column.type) {
@@ -136,7 +159,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                             case 'email': value = ''; break;
                             case 'url': value = ''; break;
                         }
-                        change(indx, key, value);
+                        self.change(indx, key, value);
                     });
                 };
 
@@ -214,7 +237,7 @@ directive('ngQueryTableFilter', ['$compile', function($compile) {
 // Cell directive, logic for single cell
 directive('ngQueryTableCell', ['$compile', function($compile) {
     var getTemplate = function(type) {
-            var template = '<input type="text" ng-model="value""/>';
+            var template = '<input type="text" ng-model="value"/>';
 
             switch(type) {
                 case 'text': template = '<input type="text" ng-model="value"/>'; break;
@@ -236,6 +259,8 @@ directive('ngQueryTableCell', ['$compile', function($compile) {
             scope: true,
             require: '^ngQueryTable',
             link: function ($scope, $element, attrs, $controller) {
+                console.log('RENDER: ' + attrs.type);
+                
                 // TODO: Change to ng-change?
                 $scope.$watch('value', function (newValue, oldValue) {
                     if(!angular.isUndefined(newValue)) {
