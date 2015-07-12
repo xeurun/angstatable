@@ -2,27 +2,39 @@
 <html>
     <head lang="en">
         <meta charset="UTF-8">
-        <title>Angular State Table</title>
+        <title>Angular Query Table</title>
         <link type="text/css" href="./css/angular-csp.css" rel="stylesheet"/>
         <link type="text/css" href="./css/style.css" rel="stylesheet"/>
+        <link type="text/css" href="./css/ngquerytable.css" rel="stylesheet"/>
         <script type="text/javascript" src="./js/vendor/angular.js"></script>
         <script type="text/javascript" src="./js/app.js"></script>
-        <script type="text/javascript" src="./js/directive/angstatable.js"></script>
+        <script type="text/javascript" src="./js/directive/ngquerytable.js"></script>
     </head>
-    <body ng-app="AngStaTableTest">
+    <body ng-app="AngularQueryTable">
         <sub>{{ contactList }}</sub>
+        <!--
+            ng-query-table - Table, inside description for column
+                caption - table caption
+                limit - row limit on page
+                pagination - show pagination or not
+                counter - counter caption if need
+            ng-query-table-column - table column
+                type - column type
+                caption - column caption
+                filter - filter type
+                sorting - allow sorting or not
+        -->
         <div class="container">
-            <ang-sta-table caption="Types" limit="2">
-                <column type="counter" name="#"></column>
-                <column type="text" name="text" filter="text"></column>
-                <column type="integer" name="integer" filter="number"></column>
-                <column type="number" name="number" filter="number"></column>
-                <column type="checkbox" name="checkbox" filter="boolean"></column>
-                <column type="date" name="date" filter="date"></column>
-                <column type="time" name="time" filter="time"></column>
-                <column type="email" name="email" filter="text"></column>
-                <column type="url" name="url" filter="text"></column>
-            </ang-sta-table>
+            <ng-query-table caption="Types" limit="5" pagination="true" counter="#">
+                <ng-query-table-column type="text" caption="text" filter="text" sorting="true"/>
+                <ng-query-table-column type="integer" caption="integer" filter="number" sorting="true"/>
+                <ng-query-table-column type="number" caption="number" filter="number" sorting="true"/>
+                <ng-query-table-column type="checkbox" caption="checkbox" filter="boolean" sorting="true"/>
+                <ng-query-table-column type="date" caption="date" filter="date" sorting="true"/>
+                <ng-query-table-column type="time" caption="time" filter="time" sorting="true"/>
+                <ng-query-table-column type="email" caption="email" filter="text" sorting="true"/>
+                <ng-query-table-column type="url" caption="url" filter="text" sorting="true"/>
+            </ng-query-table>
         </div>
     </body>
 </html>
