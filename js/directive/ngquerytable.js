@@ -37,7 +37,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                             '<tr ng-repeat="(row, element) in getFormattedData()">',
                                 '<td ng-show="counter">{{ page * limit + row + 1 }}</td>',
                                 '<td ng-repeat="(coll, column) in columns">',
-                                    '<ng-query-table-cell value="{{ query[page * limit + row][coll] }}" row="{{ page * limit + row }}" coll="{{ coll }}" type="{{ column.type }}" />',
+                                    '<ng-query-table-cell row="{{ page * limit + row }}" coll="{{ coll }}" type="{{ column.type }}" />',
                                 '</td>',
                                 '<td><button ng-click="copyRow(row)">Copy row</button><button ng-click="removeRow(row)">Remove row</button></td>',
                             '</tr>',
@@ -63,7 +63,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
             controller: function($scope, $filter) {
                 var self = this;
                 $scope.columns = [];
-                $scope.orderBy = 0;
+                $scope.orderBy = '';
                 $scope.direction = '-';
                 $scope.query = [];
                 $scope.page = 0;
@@ -76,13 +76,13 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                         var keys = key.split(':');
                         //Init array if undefined
                         if(angular.isUndefined($scope.query[keys[0]])) {
-                            $scope.query[keys[0]] = [];
+                            $scope.query[keys[0]] = {};
                         }
-                        $scope.query[keys[0]][keys[1]] = value;
+                        $scope.query[keys[0]]['coll' + keys[1]] = value;
                     } else if (key === 'page') {
                         $scope.page = parseInt(value);
                     } else if (key === 'orderBy') {
-                        $scope.orderBy = parseInt(value);
+                        $scope.orderBy = value;
                     } else if (key === 'direction') {
                         $scope.direction = value;
                     }
@@ -93,20 +93,24 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                 /* DEBUG SECTION */
                 
                 $scope.debugRefresh = function() {
-                    $scope.query = $filter('limitTo')($filter('orderBy')($scope.query, $scope.direction + $scope.orderBy, false), $scope.limit, $scope.page * $scope.limit);
+                    console.log($scope.getFormattedData());
                 }
                 
                 /* END DEBUG SECTION */
                 
                 $scope.getFormattedData = function() {
-                    return $filter('limitTo')($filter('orderBy')($scope.query, $scope.direction + $scope.orderBy, false), $scope.limit, $scope.page * $scope.limit);
+					console.log($scope.query);
+					console.log($scope.direction + '' + $scope.orderBy);
+					console.log(false);
+					return $filter('orderBy')($scope.query, $scope.direction + '' + $scope.orderBy, false);
+                    //return $filter('limitTo')($filter('orderBy')($scope.query, $scope.direction + '' + $scope.orderBy, false), $scope.limit, $scope.page * $scope.limit);
                 };
                 
                 this.change = function(row, coll, value) {
                     console.log('Changed ' + (row + ':' + coll) + ' new value: ' + value);
                     value = angular.isDate(value) ? value.toString() : value;
                     $location.search(row + ':' + coll, value);
-                    $scope.query[row][coll] = value;
+                    $scope.query[row]['coll' + coll] = value;
                 };
 
                 this.addColumn = function(column) {
@@ -132,15 +136,14 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
 
                 // Set orderBy
                 $scope.setOrderBy = function(column) {
-                    column = parseInt(column);
+					column = 'coll' + column;
                     if(column === $scope.orderBy) {
-                        $scope.direction = $scope.direction === '-' ? '+' : '-';
-                        $location.search('direction', $scope.direction);
+                        $scope.direction = ($scope.direction === '-' ? '+' : '-');
                     } else {
                         $scope.orderBy = column;
                         $location.search('orderBy', column);
-                        $location.search('direction', $scope.direction);
                     }
+					$location.search('direction', $scope.direction);
                 };
 
                 // Add new row, location for fix pagination
@@ -172,7 +175,7 @@ directive('ngQueryTable', ['$location', '$window', function($location, $window) 
                     $scope.query.push(copy);
                     
                     angular.forEach($scope.columns, function(value, key) {
-                        $location.search(newIndex + ':' + key, $scope.query[row][key]);
+                        $location.search(newIndex + ':' + key, $scope.query[row]['coll' + key]);
                     });
                 };
 
@@ -267,18 +270,20 @@ directive('ngQueryTableCell', ['$compile', function($compile) {
                         $controller.change(attrs.row, attrs.coll, newValue);
                     }
                 });
+				
+				var value = $scope.query[attrs.row]['coll' + attrs.coll];
                 
                 // TODO: Refactor + add types + delete counter value
                 switch(attrs.type) {
-                    case 'text': $scope.value = attrs.value; break;
-                    case 'integer': $scope.value = parseInt(attrs.value); break;
-                    case 'number': $scope.value = parseInt(attrs.value); break;
-                    case 'checkbox': $scope.value = (attrs.value !== "false");break;
-                    case 'date': $scope.value = new Date(angular.isUndefined(attrs.value) ? null : attrs.value); break;
-                    case 'time': $scope.value = new Date(angular.isUndefined(attrs.value) ? null : attrs.value); break;
-                    case 'email': $scope.value = attrs.value; break;
-                    case 'url': $scope.value = attrs.value; break;
-                    default: $scope.value = attrs.value;
+                    case 'text': $scope.value = value; break;
+                    case 'integer': $scope.value = parseInt(value); break;
+                    case 'number': $scope.value = parseInt(value); break;
+                    case 'checkbox': $scope.value = (value !== "false");break;
+                    case 'date': $scope.value = new Date(angular.isUndefined(value) ? null : value); break;
+                    case 'time': $scope.value = new Date(angular.isUndefined(value) ? null : value); break;
+                    case 'email': $scope.value = value; break;
+                    case 'url': $scope.value = value; break;
+                    default: $scope.value = value;
                 }
                 
                 $element.html(getTemplate(attrs.type));
